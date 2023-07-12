@@ -10,7 +10,7 @@ const path = require('path')
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
-  response(200, 'API v1 ready to go!', 'SUCCESS', res)
+  response(200, 'Wilujeng Sumping Akang & Eteh', 'SUCCESS', res)
 })  
 
 // register 
@@ -93,6 +93,7 @@ app.post('/register', (req, res) => {
   })
 })
 
+// login
 app.post('/login', (req,res) => {
   const {email, password} = req.body
   const emailRegex =/^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -108,6 +109,52 @@ app.post('/login', (req,res) => {
   }
 })  
 
+// get users
+app.get('/users', (req, res) => {
+  const accountFolderPath = path.join(__dirname, 'account')
+
+  // Membaca daftar folder pengguna dalam folder "account"
+  fs.readdir(accountFolderPath, (err, folders) => {
+    if (err) {
+      console.log('Terjadi kesalahan saat membaca folder:', err)
+      return response(500, null, 'Internal Server Error', res)
+    }
+
+    const users = []
+    let totalUsers = 0 
+
+    // Mengiterasi setiap folder pengguna
+    folders.forEach((folder) => {
+      const userFolderPath = path.join(accountFolderPath, folder)
+      const registerFilePath = path.join(userFolderPath, 'registerData.json')
+
+      // Mengecek apakah folder pengguna adalah direktori
+      if (fs.statSync(userFolderPath).isDirectory()) {
+        // Mengecek apakah file registerData.json ada di dalam folder pengguna
+        if (fs.existsSync(registerFilePath)) {
+          try {
+            const data = fs.readFileSync(registerFilePath, 'utf8')
+            const registerData = JSON.parse(data)
+            users.push(registerData)
+            totalUsers++
+          } catch (err) {
+            console.log('Terjadi kesalahan saat membaca file:', err)
+          }
+        }
+      }
+    })
+
+    const responseObj = {
+      totalUsers: totalUsers,
+      users: users,
+    };
+
+    return response(200, responseObj, 'Menampilkan data users', res)
+  })
+})
+
+
+
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+  console.log(`Server is running on port ${port}`)
 })
